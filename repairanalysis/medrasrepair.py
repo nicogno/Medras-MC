@@ -1,35 +1,35 @@
 # ############################################################################
-# 
+#
 # This software is made freely available in accordance with the simplifed BSD
 # license:
-# 
+#
 # Copyright (c) <2018>, <Stephen McMahon>
 # All rights reserved
-# Redistribution and use in source and binary forms, with or without 
+# Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright notice, 
+# 1. Redistributions of source code must retain the above copyright notice,
 # this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions and the following disclaimer in the documentation 
+# this list of conditions and the following disclaimer in the documentation
 # and/or other materials provided with the distribution.
 #
-# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY 
-# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 # DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE FOR ANY
-# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; 
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND 
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF 
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Contacts: Stephen McMahon,	stephen.mcmahon@qub.ac.uk
-# 
+#
 # ############################################################################
 #
-# Generic Medras-MC wrapper. Provides full fidelity output, misrepair separation, and misrepair 
+# Generic Medras-MC wrapper. Provides full fidelity output, misrepair separation, and misrepair
 # spectrum output through different functions.
 #
 # ############################################################################
@@ -39,25 +39,25 @@ import re
 import copy
 
 from . import medrasparser
-from . import misrepaircalculator as calcMR 
+from . import misrepaircalculator as calcMR
 from . import analyzeAberrations
 
 # Input parameters common to different processes
 sigma = 0.04187 # Misrepair range, as fraction of nuclear radius
-maxExposures = 1000  # Maximum exposures per file to simulate
+maxExposures = 100000  # Maximum exposures per file to simulate
 repeats = 50		 # Number of repeats for each exposure
 minMisrepSize = 0 	 # Neglect misrepair events separated by less than this genetic distance (MBP)
 
 # Options for fidelity repair output
 writeKinetics = True
-writeAllKinetics = False
+writeAllKinetics = True
 addFociDelay = True
 kineticLimit = 25 	 # Hours, maximum time for repair kinetics
 
 # Options for misrepair spectrum output
 doPlot = False
-allFragments = False
-listAcentrics = False
+allFragments = True
+listAcentrics = True
 simulationLimit = 24 # Hours, time at which to simulate misrepair
 
 # Method to sort files nicely with numbers.
@@ -69,11 +69,11 @@ def sort_nicely( l ):
 ###################
 #
 # Misrepair spectrum analysis and helpers
-# 
+#
 ###################
 def prepareDamage(misrepairList, remainingBreaks, chromosomes):
 	# Trim misrepair list - store chromosome, genetic position, and orientation of each break (a&b)
-	trimMisrep = [ [[a[3][1],a[4],a[5],a[1]], [b[3][1],b[4],b[5],a[1]] ] for a,b,c,d in misrepairList] 
+	trimMisrep = [ [[a[3][1],a[4],a[5],a[1]], [b[3][1],b[4],b[5],a[1]] ] for a,b,c,d in misrepairList]
 	# Extract same data for remaining breaks
 	trimBreaks = [ [a[3][1],a[4],a[5],a[1]] for a in remainingBreaks]
 
@@ -114,7 +114,7 @@ def misrepairSpectrum(fileData, header, fileName):
 		return None
 
 	print('Data for: '+fileName)
-	
+
 	noChroms = header['Chromosomes'][0]
 	baseChromosomes = [[n,0,header['Chromosomes'][1][n] ] for n in range(noChroms) ]
 	fullFrags = []
@@ -123,19 +123,19 @@ def misrepairSpectrum(fileData, header, fileName):
 	for m,breakList in enumerate(allBreaks):
 		if m>=maxExposures:
 			break
-		misrepList,repList, remBreaks = calcMR.singleRepair(copy.deepcopy(breakList), None, 
+		misrepList,repList, remBreaks = calcMR.singleRepair(copy.deepcopy(breakList), None,
 															scaledSigma, finalTime = simulationLimit)
 		trimMisrep, trimRemBreaks = prepareDamage(misrepList, remBreaks, baseChromosomes)
 
-		chroms, rings, frags = analyzeAberrations.doRepair(baseChromosomes, trimMisrep, 
-			                        remBreaks = trimRemBreaks, index=m, breaks=len(breakList)//2, 
-			                        baseBreaks=breakList, plot = doPlot, allFragments=allFragments, 
+		chroms, rings, frags = analyzeAberrations.doRepair(baseChromosomes, trimMisrep,
+			                        remBreaks = trimRemBreaks, index=m, breaks=len(breakList)//2,
+			                        baseBreaks=breakList, plot = doPlot, allFragments=allFragments,
 			                        outFile = fileName+str(m)+'.png')
 
 		frags = [f+[m] for f in frags]
 		fullFrags += frags
-		allChroms = allChroms + chroms 
-		allRings = allRings + rings 
+		allChroms = allChroms + chroms
+		allRings = allRings + rings
 	if listAcentrics:
 		listAcentricSizes(baseChromosomes, allChroms+allRings)
 
@@ -144,7 +144,7 @@ def misrepairSpectrum(fileData, header, fileName):
 ###################
 #
 # Fidelity analysis and helpers
-# 
+#
 ###################
 
 # Convert a list of repair times to a normalised kinetic curve
@@ -204,13 +204,13 @@ def repairFidelity(fileData, header, fileName):
 			if len(breakList)>20000:
 				print ('Skipping due to memory concerns','\t', end= '')
 		else:
-			repairData = calcMR.fullRepair(breakList, scaledSigma, repeats=repeats, 
-										   addFociClearance=addFociDelay, radius=radius, 
+			repairData = calcMR.fullRepair(breakList, scaledSigma, repeats=repeats,
+										   addFociClearance=addFociDelay, radius=radius,
 										   chromSizes = chromSizes, sizeLimit = minMisrepSize)
 
 		# Unpack repair data
 		mean, stdevRate, interChromRate, repTimes, analyticMisrep, etaSum = repairData
-		outputs.append([len(breakList)/2.0, mean, stdevRate, 
+		outputs.append([len(breakList)/2.0, mean, stdevRate,
 					   interChromRate, analyticMisrep, etaSum])
 		outputTimes+=repTimes
 
@@ -244,7 +244,7 @@ def repairFidelity(fileData, header, fileName):
 ###################
 #
 # Misrepair separation calculator
-# 
+#
 ###################
 separationRun = False
 def misrepairSeparation(fileData,header,fileName):
@@ -276,7 +276,7 @@ def misrepairSeparation(fileData,header,fileName):
 
 	if len(misrepairSeps)>0:
 		print(totBreaks/m/2, '\t',len(misrepairSeps)/(m*repeats),end='\t')
-		print(fileName,'\t','\t'.join(map(str, np.histogram(misrepairSeps, rBins, density=True)[0]))) 
+		print(fileName,'\t','\t'.join(map(str, np.histogram(misrepairSeps, rBins, density=True)[0])))
 	else:
 		print()
 	return None
@@ -284,7 +284,7 @@ def misrepairSeparation(fileData,header,fileName):
 ###################
 #
 # DSB separation calculator
-# 
+#
 ###################
 def dsbSeparation(fileData,header,fileName):
 	# Initialise some shared values
@@ -312,16 +312,16 @@ def dsbSeparation(fileData,header,fileName):
 				#	print(i,j)
 
 	if len(seps)>0:
-		print('\t'.join(map(str, np.histogram(seps, rBins, density=True)[0]))) 
+		print('\t'.join(map(str, np.histogram(seps, rBins, density=True)[0])))
 	else:
-		print()	
+		print()
 
 	return None
 
 ###################
 #
 # Radial damage separation calculator
-# 
+#
 ###################
 radialRun = False
 def radialDSBs(fileData,header,fileName):
@@ -346,16 +346,16 @@ def radialDSBs(fileData,header,fileName):
 			#print('\t'.join(map(str,breakList[i][1])))
 			seps.append(np.sqrt(pow(breakList[i][1][0],2)+pow(breakList[i][1][1],2)))
 	if len(seps)>0:
-		print('\t'.join(map(str, np.histogram(seps, rBins, density=True)[0]))) 
+		print('\t'.join(map(str, np.histogram(seps, rBins, density=True)[0])))
 	else:
-		print()	
+		print()
 
 	return None
 
 ###################
 #
 # Output damage by track
-# 
+#
 ###################
 trackRun = False
 def trackBreaks(fileData,header,fileName):
@@ -393,9 +393,9 @@ def trackBreaks(fileData,header,fileName):
 ###################
 #
 # Simulation wrapper
-# 
+#
 ###################
-def repairSimulation(folder, analysisFunction='Fidelity', verbose=False):
+def repairSimulation(folder, analysisFunction='Fidelity', verbose=True):
 	functions = [ ['Fidelity',repairFidelity],
 				  ['Separation',misrepairSeparation],
 				  ['Spectrum',misrepairSpectrum],

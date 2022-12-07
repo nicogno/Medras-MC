@@ -102,7 +102,8 @@ def subDividePlane(minZ,maxZ,planeChroms):
 		# Guess initial Y value, then use root-finding to solve.
 		# No simple polynomial, so use more complex method
 		yGuess = 2*np.sqrt(newArea/np.pi)-1
-		newY = np.asscalar(scipy.optimize.broyden1(lambda x:areaFunc(newArea,x),yGuess))
+		#newY = np.asscalar(scipy.optimize.broyden1(lambda x:areaFunc(newArea,x),yGuess))
+		newY = np.ndarray.item(scipy.optimize.broyden1(lambda x:areaFunc(newArea,x),yGuess))
 
 		# Calculate midpoint of Y slice, and X and Y spans
 		midY = 0.5*(currY+newY)
