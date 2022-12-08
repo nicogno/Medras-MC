@@ -28,8 +28,9 @@ fileIndex = [i for i, e in enumerate(lines) if e.startswith("Data for:")]
 
 files = []
 
-headers = lines[fileIndex[0]+1].split("\t")
-headers = headers[1:-2]
+headers_complete = lines[fileIndex[0]+1].split("\t")
+headers = [e for e in headers_complete if e not in ('Index', 'Single-Junction Chromosomes', 'Multi-Junction Chromosomes', 'Normal Chromosomes', 'Initial DNA Fragmentation', 'Potential DNA loss')]
+headers_indices = [i for i in range(len(headers_complete)) if headers_complete[i] in headers]
 
 for f in range(len(fileIndex)-1):
     if f==0:
@@ -47,8 +48,8 @@ for file in files:
     summaries = np.zeros(len(headers))
     for line in file:
         if line[1]!="No misrepair!":
-            for n, field in enumerate(line[1:-2]):
-                summaries[n] += int(field)
+            for n in range(len(headers)):
+                summaries[n]+=int(line[headers_indices[n]])
     for n, field in enumerate(headers):
         print("total "+field+" "+str(summaries[n]))
     print("\n")
