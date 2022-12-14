@@ -238,13 +238,13 @@ def checkHeader(initialBreaks=None, headerPrint=[False]):
 	print('Index\tBreaks\tResidual\tMisrepairs\tLarge Misrepairs\tInter-Chromosome Misrepairs\t'
 		  'Single-Junction Chromosomes\tMulti-Junction Chromosomes\tNormal Chromosomes\t'
 		  'Acentric Linear\tLarge Acentric Fragment\tMulti-Centric\tCentric Ring\tAcentric Ring\t'
-		  'Multi-Centric Ring\tLarge Ring Fragment', end='')
+		  'Multi-Centric Ring\tLarge Ring Fragment\tSigle Hit Repairs', end='')
 	if initialBreaks is not None:
 		print('\tInitial DNA Fragmentation\tPotential DNA loss', end='')
 	print()
 
 # Core repair loop, iterate over each repair and append chromosome fragments
-def doRepair(chromosomes, repairs, remBreaks=None, index=0, breaks=-1, baseBreaks=None, plot=False, 
+def doRepair(chromosomes, repairs, singleHitRepairs, remBreaks=None, index=0, breaks=-1, baseBreaks=None, plot=False, 
 			 allFragments=False, inFile=None, outFile=None):
 	checkHeader(baseBreaks)
 	# Build our breaklist, and abort if empty
@@ -296,6 +296,7 @@ def doRepair(chromosomes, repairs, remBreaks=None, index=0, breaks=-1, baseBreak
 	      '\t', calculateComplexities(chromList+rings), 
 	      '\t', centricCheck(chromosomes,linearChromosomes),
 	      '\t', centricCheck(chromosomes,ringChromosomes), 
+		'\t', singleHitRepairs,
 	      end='')
 	if baseBreaks!=None:
 		lostDNA, lostFragments = dnaLoss(chromosomes, linearChromosomes+ringChromosomes)

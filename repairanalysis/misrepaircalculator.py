@@ -122,6 +122,7 @@ def singleRepair(breakList, rateTable, sigma=None, finalTime=np.inf):
     # Reporting variables
     repairEvents = []
     misrepairedPairs = []
+    singleHitRepairs = 0
 
     # Simulate repair until no more breaks remain, or we exceed the simulation limit
     while len(liveBreaks)+len(pendingBreaks) > 0:
@@ -171,6 +172,7 @@ def singleRepair(breakList, rateTable, sigma=None, finalTime=np.inf):
             else:
                 # Matched DSB ends always clear 1 DSB, no misrepair
                 repairEvents.append([nextTime, endOne, endTwo, complexity])
+                singleHitRepairs+=1
 
             # Tidy up break data
             liveBreaks.pop(liveBreaks.index(endOne))
@@ -197,7 +199,7 @@ def singleRepair(breakList, rateTable, sigma=None, finalTime=np.inf):
     # Return a list of unrepaired breaks, if we halted before all were repaired
     if finalTime < np.inf:
         remBreaks = [b for b in breakList if b != 0]
-        return misrepairedPairs, repairEvents, remBreaks
+        return misrepairedPairs, repairEvents, remBreaks, singleHitRepairs
 
     # Otherwise, clean up any breaks which were missed and return 'full' repair
     # This is an effectively random pairing, but should hopefully just be tidying up corner cases
@@ -210,7 +212,7 @@ def singleRepair(breakList, rateTable, sigma=None, finalTime=np.inf):
             misrepairedPairs.append([breakList[p1], breakList[p2], -1, 0])
 
     # Otherwise just return 'full' repair
-    return misrepairedPairs, repairEvents, []
+    return misrepairedPairs, repairEvents, [], singleHitRepairs
 
 # Full repair in single pass.
 

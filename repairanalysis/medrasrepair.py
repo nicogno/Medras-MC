@@ -123,11 +123,11 @@ def misrepairSpectrum(fileData, header, fileName):
 	for m,breakList in enumerate(allBreaks):
 		if m>=maxExposures:
 			break
-		misrepList,repList, remBreaks = calcMR.singleRepair(copy.deepcopy(breakList), None,
+		misrepList,repList, remBreaks, singleHitRepairs = calcMR.singleRepair(copy.deepcopy(breakList), None,
 															scaledSigma, finalTime = simulationLimit)
 		trimMisrep, trimRemBreaks = prepareDamage(misrepList, remBreaks, baseChromosomes)
 
-		chroms, rings, frags = analyzeAberrations.doRepair(baseChromosomes, trimMisrep,
+		chroms, rings, frags = analyzeAberrations.doRepair(baseChromosomes, trimMisrep, singleHitRepairs,
 			                        remBreaks = trimRemBreaks, index=m, breaks=len(breakList)//2,
 			                        baseBreaks=breakList, plot = doPlot, allFragments=allFragments,
 			                        outFile = fileName+str(m)+'.png')

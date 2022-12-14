@@ -4,11 +4,12 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
+
     {
-      "name": "testRepairAnalysis.py",
+      "name": "survival.py",
       "type": "python",
       "request": "launch",
-      "program": "~/Medras-MC/testRepairAnalysis.py",
+      "program": "~/Medras-MC/survival.py",
       "console": "integratedTerminal",
       "justMyCode": true
     }
